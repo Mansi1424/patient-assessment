@@ -1,11 +1,9 @@
 package com.patientassessment.controller;
 
-import com.patientassessment.model.Patient;
+
 import com.patientassessment.model.PatientDetails;
-import com.patientassessment.model.Risk;
 import com.patientassessment.service.RiskService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
