@@ -6,5 +6,6 @@ import com.patientassessment.model.Risk;
 import reactor.core.publisher.Mono;
 
 public interface RiskService {
-    Mono<PatientDetails> getRisk(Integer patId);
+    Mono<PatientDetails> getRiskData(Integer patId);
+
 }

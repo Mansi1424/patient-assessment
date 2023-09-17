@@ -24,7 +24,7 @@ public class RiskController {
 
     @GetMapping("/id")
     public Mono<PatientDetails> getRisk(@RequestParam Integer patId) {
-        return riskService.getRisk(patId);
+        return riskService.getRiskData(patId);
     }
 
 
