@@ -4,10 +4,8 @@ package com.patientassessment.controller;
 import com.patientassessment.model.PatientDetails;
 import com.patientassessment.service.RiskService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
@@ -20,9 +18,24 @@ public class RiskController {
     @Autowired
     private RiskService riskService;
 
-    @GetMapping("/id")
-    public Mono<PatientDetails> getRisk(@RequestParam Integer patId) {
+    @GetMapping("/patId")
+    public Mono<PatientDetails> getRiskData(@RequestParam Integer patId) {
+
         return riskService.getRiskData(patId);
+    }
+
+//    @GetMapping("/id")
+//    public String getRisk(@RequestParam Integer patId) {
+//
+//        return riskService.getRisk(riskService.getRiskData(patId));
+//    }
+
+    @PostMapping("/id")
+    public ResponseEntity<Mono<String>> assessPatient(@RequestParam String patId) {
+
+        Mono<String> risk = riskService.returnRisk(Integer.valueOf(patId));
+        return ResponseEntity.ok(risk);
+
     }
 
 

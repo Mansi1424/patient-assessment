@@ -3,6 +3,7 @@ package com.patientassessment.service;
 import com.patientassessment.model.Patient;
 import com.patientassessment.model.PatientDetails;
 import com.patientassessment.model.PatientHistory;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
@@ -12,8 +13,12 @@ import java.time.LocalDate;
 import java.time.Period;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.TimeoutException;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Service
 public class RiskServiceImpl implements RiskService{
@@ -21,27 +26,13 @@ public class RiskServiceImpl implements RiskService{
     private final WebClient webClientPatientService;
     private final WebClient webClientPatientHistoryService;
 
+
     public RiskServiceImpl(WebClient.Builder webClientBuilder, WebClient webClientPatientService) {
         this.webClientPatientService = webClientBuilder.baseUrl("http://localhost:8081").build();
         this.webClientPatientHistoryService = webClientBuilder.baseUrl("http://localhost:8082").build();
 
     }
-//    @Override
-//    public Mono<PatientDetails> getRisk(Integer patId) {
-//        return webClientPatientService.get()
-//                .uri("/patient/get/{id}", patId)
-//                .retrieve()
-//                .bodyToMono(Patient.class)
-//                .map(patient -> {
-//                    PatientDetails response = new PatientDetails();
-//                    response.setAge(calculateAge(patient.getDateOfBirth()));
-//                    response.setGender(patient.getSex());
-//                    return response;
-//                })
-//                .timeout(Duration.ofSeconds(10))
-//                .onErrorMap(TimeoutException.class, e -> new RuntimeException("Timeout occured", e));
-//
-//    }
+
 
     @Override
     public Mono<PatientDetails> getRiskData(Integer patId) {
@@ -79,12 +70,100 @@ public class RiskServiceImpl implements RiskService{
 
                     return response;
                 })
-                .timeout(Duration.ofSeconds(10))
+                .timeout(Duration.ofSeconds(50))
                 .onErrorMap(TimeoutException.class, e -> new RuntimeException("Timeout occurred", e));
     }
 
 
-    public static String calculateAge(String dob) {
+    /**
+     * Method getRisk - To calculate the risk based off the riskData
+     *
+     * @param riskData the data from both services to calculate risk
+     * @return the risk
+     */
+
+    @Override
+    public Mono<String> getRisk(Mono<PatientDetails> riskData) {
+        return riskData.map(patientDetails -> {
+            String risk = "";
+            List<String> notes = patientDetails.getNotes();
+            int triggerWordsCount = returnTriggerWordsInAllNotes(notes);
+
+            int age = Integer.parseInt(patientDetails.getAge());
+            String gender = patientDetails.getGender();
+            boolean male = Objects.equals(gender, "M");
+            boolean female = Objects.equals(gender, "F");
+
+            if (male && age < 30 && triggerWordsCount == 3) {
+                risk = "In Danger";
+            }
+            else if (female && age < 30 && triggerWordsCount == 4) {
+                risk = "In Danger";
+            }
+           else if (age > 30 && triggerWordsCount == 6) {
+                risk = "In Danger";
+            }
+            else if (age > 30 && triggerWordsCount == 2) {
+                risk = "Borderline";
+            }
+            else if (age < 30 && male && triggerWordsCount == 5) {
+                risk = "Early Onset";
+            }
+            else if (age < 30 && female && triggerWordsCount >= 7) {
+                risk = "Early Onset";
+            }
+            else if (age > 30 && triggerWordsCount >= 8) {
+                risk = "Early Onset";
+            }
+            else if (triggerWordsCount == 0) {
+                risk = "None";
+            }
+
+
+            return risk;
+
+        });
+
+
+    }
+
+    @Override
+    public Mono<String> returnRisk(Integer patId) {
+        return getRisk(getRiskData(patId));
+    }
+
+    @Override
+    public int returnNumTriggerWords(String notes) {
+        List <String> triggerWords = Arrays.asList("Hemoglobin A1C", "Microalbumin", "Body Height", "Body Weight", "Smoker", "Abnormal", "Cholesterol", "Dizziness", "Relapse", "Reaction", "Antibodies");
+        // Initialize a total count variable
+        int totalWordCount = 0;
+
+        // Iterate through the list of words and count their occurrences
+        for (String triggerWordToFind : triggerWords) {
+            Pattern pattern = Pattern.compile("\\b" + triggerWordToFind + "\\b", Pattern.CASE_INSENSITIVE);
+            Matcher matcher = pattern.matcher(notes);
+
+            while (matcher.find()) {
+                totalWordCount++;
+            }
+        }
+
+        return totalWordCount;
+    }
+
+    @Override
+    public int returnTriggerWordsInAllNotes(@NotNull List<String> notesList) {
+        int totalTriggerWordsCount = 0;
+        for (String note : notesList) {
+            int triggerWordsCount = returnNumTriggerWords(note);
+            totalTriggerWordsCount += triggerWordsCount;
+        }
+        return totalTriggerWordsCount;
+    }
+
+
+    @Override
+    public @NotNull String calculateAge(String dob) {
         // Define the date format for the DOB string
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
