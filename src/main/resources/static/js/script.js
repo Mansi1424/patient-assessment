@@ -48,7 +48,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 });
         }
 
-        if (familyName) {
+        else if (familyName) {
             fetch('/assess/familyName', {
                 method: "POST",
                 headers: {
