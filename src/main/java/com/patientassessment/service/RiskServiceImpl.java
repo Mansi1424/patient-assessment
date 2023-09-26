@@ -4,6 +4,7 @@ import com.patientassessment.model.Patient;
 import com.patientassessment.model.PatientDetails;
 import com.patientassessment.model.PatientHistory;
 import org.jetbrains.annotations.NotNull;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
@@ -26,11 +27,11 @@ public class RiskServiceImpl implements RiskService {
     private final WebClient webClientPatientService;
     private final WebClient webClientPatientHistoryService;
 
-
-    public RiskServiceImpl(WebClient.Builder webClientBuilder, WebClient webClientPatientService) {
-        this.webClientPatientService = webClientBuilder.baseUrl("http://localhost:8081").build();
-        this.webClientPatientHistoryService = webClientBuilder.baseUrl("http://localhost:8082").build();
-
+    public RiskServiceImpl(WebClient.Builder webClientBuilder,
+                           @Value("${patient.service.base-url}") String patientServiceBaseUrl,
+                           @Value("${patient.history.service.base-url}") String patientHistoryServiceBaseUrl) {
+        this.webClientPatientService = webClientBuilder.baseUrl(patientServiceBaseUrl).build();
+        this.webClientPatientHistoryService = webClientBuilder.baseUrl(patientHistoryServiceBaseUrl).build();
     }
 
 
