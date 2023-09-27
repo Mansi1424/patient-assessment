@@ -51,6 +51,9 @@ services:
     depends_on:
       - apiservice
       - springbootdockercompose
+    environment:
+      - patient.service.base-url=http://apiservice:8081
+      - patient.history.service.base-url=http://springbootdockercompose:8082
 
 volumes:
   mongodb_data:
