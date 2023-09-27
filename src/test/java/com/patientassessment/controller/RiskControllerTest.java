@@ -35,5 +35,15 @@ public class RiskControllerTest {
 
     }
 
+    @Test
+    public void testAssessPatientByFamilyName() throws Exception {
+
+        String familyName = "TestNone";
+        mockMvc.perform(MockMvcRequestBuilders.post("/assess/familyName")
+                        .param("familyName", familyName))
+                .andExpect(status().isOk());
+
+    }
+
 
 }
